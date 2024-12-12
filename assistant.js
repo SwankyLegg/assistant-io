@@ -1,5 +1,22 @@
-class Assistant {
-  constructor() {
+export class Assistant {
+  constructor(config = {}) {
+    this.config = {
+      // Synthesis defaults
+      pitch: 1,
+      rate: 1,
+
+      // Recognition defaults
+      continuous: true,
+      interimResults: true,
+      lang: 'en-US',
+      maxAlternatives: 3,
+      ...config
+    };
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      throw new Error('Assistant requires a browser environment to run');
+    }
+
     this.states = {
       idle: 'idle',
       waitingForMic: 'waitingForMic',
@@ -15,12 +32,90 @@ class Assistant {
     this.lastError = null;
     this.stateHandlers = new Map();
 
-    // Initialize speech APIs
-    this.synthesizer = window.speechSynthesis;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    this.recognizer = new SpeechRecognition();
+    // Check for Speech API support
+    if (!('speechSynthesis' in window)) {
+      throw new Error('Speech synthesis not supported in this browser');
+    }
 
+    this.synthesizer = window.speechSynthesis;
+
+    // Check for Speech Recognition support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      throw new Error('Speech recognition not supported in this browser');
+    }
+
+    // Initialize speech recognition with error handling
+    try {
+      this.recognizer = new SpeechRecognition();
+      this.recognizer.continuous = false;
+      this.recognizer.interimResults = false;
+
+      // Set up error handlers
+      this.recognizer.onerror = (event) => {
+        this.lastError = event.error;
+        this.setState(this.states.error, event);
+      };
+
+      this.synthesizer.onvoiceschanged = () => {
+        this.voices = this.synthesizer.getVoices();
+      };
+
+      // Get initial voices if already loaded
+      this.voices = this.synthesizer.getVoices();
+
+    } catch (error) {
+      throw new Error(`Failed to initialize speech recognition: ${error.message}`);
+    }
+
+    // Initialize state machine
     this.setupStateTransitions();
+
+    // Ensure proper cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      this.cleanup();
+    });
+  }
+
+  cleanup() {
+    // Stop any ongoing speech or recognition
+    this.synthesizer.cancel();
+    try {
+      this.recognizer.stop();
+    } catch (e) {
+      // Ignore errors during cleanup
+    }
+
+    // Clear all state handlers
+    this.stateHandlers.clear();
+  }
+
+  // Static method to check browser compatibility
+  static checkCompatibility() {
+    const requirements = {
+      speechSynthesis: 'speechSynthesis' in window,
+      speechRecognition: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
+      audioContext: 'AudioContext' in window || 'webkitAudioContext' in window
+    };
+
+    return {
+      isCompatible: Object.values(requirements).every(Boolean),
+      requirements
+    };
+  }
+
+  setupStateTransitions() {
+    // Define valid transitions from each state
+    this.transitions = {
+      idle: ['listening', 'error', 'waitingForMic', 'speaking'],
+      waitingForMic: ['listening', 'error'],
+      listening: ['detecting', 'idle', 'error'],
+      detecting: ['transcribing', 'listening', 'error'],
+      transcribing: ['thinking', 'detecting', 'error'],
+      thinking: ['speaking', 'idle', 'error'],
+      speaking: ['idle', 'error', 'listening'],  // Added listening as valid transition
+      error: ['idle']
+    };
   }
 
   setState(newState, payload = null) {
@@ -62,15 +157,9 @@ class Assistant {
   handleStateEnter(state, payload) {
     switch (state) {
       case this.states.listening:
-        if (this.synthesizer.speaking) {
-          this.synthesizer.cancel();
-        }
         this.recognizer.start();
         break;
       case this.states.speaking:
-        if (this.recognizer.listening) {
-          this.recognizer.stop();
-        }
         const utterance = new SpeechSynthesisUtterance(payload);
         utterance.onend = () => this.setState(this.states.idle);
         utterance.onerror = (error) => this.setState(this.states.error, error);
@@ -91,12 +180,10 @@ class Assistant {
     this.stateHandlers.get(state)?.delete(handler);
   }
 
-  notifyStateChange(newState, payload) {
+  notifyStateChange(oldState, newState, payload) {
     const handlers = this.stateHandlers.get(newState);
     if (handlers) {
       handlers.forEach(handler => handler(payload));
     }
   }
-}
-
-export default Assistant;
+};
