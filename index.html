@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speech Assistant Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        #status {
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        #transcript {
+            min-height: 100px;
+            border: 1px solid #ccc;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Speech Assistant Demo</h1>
+    <div id="status">Current State: <span id="currentState">idle</span></div>
+    <button id="toggleMic">Start Listening</button>
+    <div id="transcript"></div>
+
+    <script type="module">
+        import Assistant from './speech-assistant.js';
+
+        const asst = new Assistant();
+        const toggleButton = document.getElementById('toggleMic');
+        const stateDisplay = document.getElementById('currentState');
+        const transcript = document.getElementById('transcript');
+
+        // Update UI to reflect current state
+        function updateState(state) {
+            stateDisplay.textContent = state;
+            if (state === 'listening') {
+                toggleButton.textContent = 'Stop Listening';
+            } else {
+                toggleButton.textContent = 'Start Listening';
+            }
+        }
+
+        // Handle button click
+        toggleButton.onclick = () => {
+            if (asst.getState() === 'idle') {
+                asst.setState('listening');
+                asst.startListening();
+            } else {
+                asst.setState('idle');
+                asst.stopListening();
+            }
+        };
+
+        // Bind assistant events
+        asst.on('listenStart', () => {
+            updateState('listening');
+            console.log('Started listening...');
+        });
+
+        asst.on('listenEnd', () => {
+            updateState('idle');
+            console.log('Stopped listening');
+        });
+
+        asst.on('recognitionResult', (results) => {
+            // Get the most recent result
+            const result = results[results.length - 1];
+            
+            // If it's a final result
+            if (result.isFinal) {
+                const text = result[0].transcript;
+                transcript.textContent = text;
+                
+                // Simple response system
+                asst.setState('thinking');
+                updateState('thinking');
+                
+                setTimeout(() => {
+                    // Simple responses based on keywords
+                    let response;
+                    if (text.toLowerCase().includes('hello')) {
+                        response = 'Hello! How can I help you today?';
+                    } else if (text.toLowerCase().includes('time')) {
+                        response = `The current time is ${new Date().toLocaleTimeString()}`;
+                    } else {
+                        response = `I heard you say: ${text}`;
+                    }
+                    
+                    asst.setState('responding');
+                    updateState('responding');
+                    asst.speak(response);
+                    
+                    // Reset state after speaking
+                    setTimeout(() => {
+                        asst.setState('idle');
+                        updateState('idle');
+                    }, 2000);
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
