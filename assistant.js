@@ -1,69 +1,101 @@
 class Assistant {
   constructor() {
-    this.state = 'idle';
+    this.states = {
+      idle: 'idle',
+      waitingForMic: 'waitingForMic',
+      listening: 'listening',
+      detecting: 'detecting',
+      transcribing: 'transcribing',
+      thinking: 'thinking',
+      speaking: 'speaking',
+      error: 'error'
+    };
 
-    // Initialize speech APIs with browser compatibility
+    this.state = this.states.idle;
+    this.lastError = null;
+    this.stateHandlers = new Map();
+
+    // Initialize speech APIs
     this.synthesizer = window.speechSynthesis;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     this.recognizer = new SpeechRecognition();
 
-    // Default recognition settings
-    this.recognizer.continuous = true;
-    this.recognizer.interimResults = true;
-    this.recognizer.lang = 'en-US';
-    this.recognizer.maxAlternatives = 3;
+    this.setupStateTransitions();
   }
 
-  // Event binding methods to match documentation
-  on(eventName, handler) {
-    switch (eventName) {
-      case 'listenStart':
-        this.recognizer.onaudiostart = handler;
+  setState(newState, payload = null) {
+    if (!this.transitions[this.state]?.includes(newState)) {
+      console.error(`Invalid state transition from ${this.state} to ${newState}`);
+      return false;
+    }
+
+    const oldState = this.state;
+
+    // Handle cleanup of current state
+    this.handleStateExit(oldState);
+
+    // Update state
+    this.state = newState;
+
+    // Initialize new state
+    this.handleStateEnter(newState, payload);
+
+    // Notify listeners
+    this.notifyStateChange(oldState, newState, payload);
+
+    return true;
+  }
+
+  handleStateExit(state) {
+    switch (state) {
+      case this.states.speaking:
+        this.synthesizer.cancel();
         break;
-      case 'volume':
-        // Handler for volume changes
-        break;
-      case 'recognitionResult':
-        this.recognizer.onresult = (event) => {
-          handler(event.results);
-        };
-        break;
-      case 'listenEnd':
-        this.recognizer.onend = handler;
-        break;
-      case 'voiceStart':
-        this.recognizer.onspeechstart = handler;
-        break;
-      case 'voiceEnd':
-        this.recognizer.onspeechend = handler;
+      case this.states.listening:
+      case this.states.detecting:
+      case this.states.transcribing:
+        this.recognizer.stop();
         break;
     }
   }
 
-  // State management
-  setState(newState) {
-    const validStates = ['idle', 'listening', 'thinking', 'responding'];
-    if (validStates.includes(newState)) {
-      this.state = newState;
+  handleStateEnter(state, payload) {
+    switch (state) {
+      case this.states.listening:
+        if (this.synthesizer.speaking) {
+          this.synthesizer.cancel();
+        }
+        this.recognizer.start();
+        break;
+      case this.states.speaking:
+        if (this.recognizer.listening) {
+          this.recognizer.stop();
+        }
+        const utterance = new SpeechSynthesisUtterance(payload);
+        utterance.onend = () => this.setState(this.states.idle);
+        utterance.onerror = (error) => this.setState(this.states.error, error);
+        this.synthesizer.speak(utterance);
+        break;
     }
   }
 
-  getState() {
-    return this.state;
+  // Event handling
+  onState(state, handler) {
+    if (!this.stateHandlers.has(state)) {
+      this.stateHandlers.set(state, new Set());
+    }
+    this.stateHandlers.get(state).add(handler);
   }
 
-  // Voice methods
-  speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    this.synthesizer.speak(utterance);
+  offState(state, handler) {
+    this.stateHandlers.get(state)?.delete(handler);
   }
 
-  startListening() {
-    this.recognizer.start();
-  }
-
-  stopListening() {
-    this.recognizer.stop();
+  notifyStateChange(newState, payload) {
+    const handlers = this.stateHandlers.get(newState);
+    if (handlers) {
+      handlers.forEach(handler => handler(payload));
+    }
   }
 }
 
