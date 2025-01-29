@@ -2,6 +2,10 @@
 
 Speech Recognition (text-to-speech) & Speech Synthesis (speech-to-text)
 
+## Demo
+
+Try it out: [Live Demo](https://swankylegg.github.io/assistant-io/)
+
 ### States
 
 The assistant has four possible states:
