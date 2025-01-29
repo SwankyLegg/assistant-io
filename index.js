@@ -50,10 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     onVoiceStart: () => {
       console.log('Started speaking');
       currentState.textContent = formatString(asst.states.RESPONDING);
+      speakButton.textContent = 'Stop';
     },
     onVoiceEnd: (utterance) => {
       console.log('Finished speaking:', utterance.text);
       currentState.textContent = formatString(asst.states.IDLE);
+      speakButton.textContent = 'Speak';
     },
     onError: (error) => {
       console.error('Assistant error:', error);
@@ -84,5 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize button text
   toggleMic.textContent = 'Listen';
+  speakButton.textContent = 'Speak';
   currentState.textContent = formatString(asst.states.IDLE);
 });
