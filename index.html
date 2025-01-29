@@ -6,22 +6,57 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Voice I/O Demo</h1>
-            <button id="toggleMic">Listen</button>
-        </div>
-        
-        <div id="status">Current State: <span id="currentState">idle</span></div>
-        
-        <div class="transcript-container">
-            <div id="finalTranscript">Transcript will appear here</div>
-            <div id="interimTranscript"></div>
+        <div class="card">
+            <div class="header">
+                <h1>Voice I/O Demo</h1>
+                <p class="subtitle">A demonstration of browser-based speech recognition and synthesis, coordinated by a central library that manages microphone and speaker states. It's compatible with Chrome, Edge, and Safari, on both desktop and mobile.</p>
+            </div>
+
+            <div class="instructions">
+                <h2>How it works:</h2>
+                <ol>
+                    <li>Click "Listen" to start speech recognition</li>
+                    <li>Speak into your microphone - your words will appear in the transcript area</li>
+                    <li>Recognition stops automatically after you finish speaking</li>
+                    <li>Try the text-to-speech feature by typing text and clicking "Speak"</li>
+                </ol>
+            </div>
+            <footer>
+                <p class="note">Note: This demo requires a modern browser with speech recognition support.</p>
+            </footer>
         </div>
 
+        <div class="card">
+            <div id="status">Current State: <span id="currentState">idle</span></div>
+            
+            <div class="transcript-section">
+                <div class="demo-header">
+                    <div>
+                        <h3>Speech Recognition</h3>
+                        <p class="section-subtitle">speech-to-text</p>
+                    </div>
+                    <button id="toggleMic" class="primary-button">Listen</button>
+                </div>
+                <div class="transcript-container">
+                    <div id="transcript" class="text-display">Your speech will appear here...</div>
+                </div>
+            </div>
 
-        <div id="response">
-            <input type="text" id="responseInput" placeholder="Hello world">
-            <button id="speakButton">Speak</button>
+            <div class="synthesis-section">
+                <div class="demo-header">
+                    <div>
+                        <h3>Speech Synthesis</h3>
+                        <p class="section-subtitle">text-to-speech</p>
+                    </div>
+                    <button id="speakButton" class="primary-button">Speak</button>
+                </div>
+                <div id="response">
+                    <input type="text" 
+                           id="responseInput" 
+                           class="text-input"
+                           placeholder="Enter text to be spoken...">
+                </div>
+            </div>
         </div>
     </div>
 

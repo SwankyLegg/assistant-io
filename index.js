@@ -21,9 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const latestResult = results[results.length - 1];
     const bestResult = latestResult[0];
 
-    // Update display based on whether it's final or interim
-    interimTranscript.textContent = bestTranscript;
-    finalTranscript.textContent = accumulatedTranscript;
+    // Get the transcript element
+    const transcript = document.querySelector('#transcript');
+
+    // Update text and style based on whether it's final
+    transcript.textContent = bestResult.isFinal ? accumulatedTranscript : bestTranscript;
+    transcript.classList.toggle('interim', !bestResult.isFinal);
 
     if (bestResult.isFinal) {
       console.log('Final result:', {
