@@ -3,8 +3,8 @@ const DEFAULT_CONFIG = {
   onListenStart: null,
   onListenEnd: null,
   onRecognitionResult: null,
-  onSpeechStart: null,
-  onSpeechEnd: null,
+  onVoiceStart: null,
+  onVoiceEnd: null,
   onError: null,
 
   // Synthesis settings
@@ -19,7 +19,7 @@ const DEFAULT_CONFIG = {
     continuous: true,
     interimResults: true,
     lang: 'en-US',
-    maxAlternatives: 1
+    maxAlternatives: 3
   }
 };
 
@@ -34,21 +34,7 @@ export class Assistant {
   constructor(config = {}) {
     // So these can be accessed directly without a separate import
     this.states = STATES;
-
     this.state = this.states.IDLE;
-
-    // Initialize speech APIs with browser compatibility checks
-    if (!('speechSynthesis' in window)) {
-      throw new Error('Speech synthesis not supported');
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      throw new Error('Speech recognition not supported');
-    }
-
-    this.synthesizer = window.speechSynthesis;
-    this.recognizer = new SpeechRecognition();
 
     // Merge configs
     this.config = {
@@ -58,114 +44,141 @@ export class Assistant {
       ...config
     };
 
-    // Configure recognition
-    Object.assign(this.recognizer, this.config.recognition);
-
-    // Set up recognition event handlers
-    this.recognizer.onstart = () => {
-      this.setState(STATES.LISTENING);
-      this.config.onListenStart?.();
-    };
-
-    this.recognizer.onend = () => {
-      if (this.state === STATES.LISTENING) {
-        this.setState(STATES.IDLE);
-      }
-      this.config.onListenEnd?.();
-    };
-
-    this.recognizer.onresult = (event) => {
-      const result = event.results[event.results.length - 1];
-      this.config.onRecognitionResult?.(result);
-    };
-
-    this.recognizer.onerror = (error) => {
-      this.setState(STATES.IDLE);
-      this.config.onError?.(error);
-    };
+    this.initRecognizer();
+    this.initSynthesizer();
 
     // Clean up on page unload
     window.addEventListener('beforeunload', () => this.cleanup());
   }
 
-  setState(newState) {
+  initRecognizer() {
+    // Browser compatibility check
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      throw new Error('Speech recognition not supported');
+    }
+    this.recognizer = new SpeechRecognition();
+    Object.assign(this.recognizer, this.config.recognition);
+
+    this.recognitionResults = [];
+
+    this.recognizer.onstart = () => {
+      this.config.onListenStart?.();
+    };
+
+    this.recognizer.onresult = (evt) => this.handleRecognitionResult(evt);
+
+    this.recognizer.onend = () => {
+      this.config.onListenEnd?.();
+    };
+
+    this.recognizer.onerror = (error) => {
+      this.handleError(error, 'recognizer');
+    };
+  }
+
+  initSynthesizer() {
+    // Browser compatibility check
+    if (!('speechSynthesis' in window)) {
+      throw new Error('Speech synthesis not supported');
+    }
+    this.synthesizer = window.speechSynthesis;
+  };
+
+  handleRecognitionResult(evt) {
+    console.log(evt.results);
+    [...evt.results].map((recognitionResult) => {
+      [...recognitionResult].map((result) => {
+        console.log(result.transcript);
+      });
+    });
+    // console.log(evt.results.map(r => r.transcript));
+    // this.recognitionResults.push(evt.recognitionResults);
+    // this.config.onRecognitionResult?.(evt);
+  };
+
+  setIdle() {
+    this.cleanup();
+  };
+
+  setListening() {
+    this.cleanup();
+    this.recognizer.start();
+  };
+
+  setThinking() {
+    this.cleanup();
+  };
+
+  setSpeaking(text) {
+    this.cleanup();
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Apply config
+    Object.assign(utterance, this.config.synthesis);
+    // Add event handlers
+    utterance.onend = () => {
+      this.setState(STATES.IDLE);
+      this.config.onVoiceEnd?.(utterance);
+    };
+    utterance.onstart = () => {
+      this.config.onVoiceStart?.(utterance);
+    };
+    utterance.onerror = (error) => {
+      this.handleError(error, 'utterance');
+    };
+    this.synthesizer.speak(utterance);
+  };
+
+  setState(newState, textToSynthesize) {
+    console.log(newState);
+
+    // Don't do anything if state state is invalid or same
     if (!this.states[newState]) {
       throw new Error(`Invalid state: ${newState}`);
     }
-
-    // Don't do anything if state isn't changing
     if (this.state === newState) {
-      return;
+      return console.log('No Assistant state change');
     }
 
-    // Handle cleanup of previous state
-    switch (this.state) {
-      case STATES.LISTENING:
-        this.recognizer.stop();
-        break;
-      case STATES.RESPONDING:
-        this.synthesizer.cancel();
-        break;
-    }
-
-    // Handle initialization of new state
     switch (newState) {
-      case STATES.LISTENING:
-        try {
-          this.recognizer.start();
-        } catch (error) {
-          this.config.onError?.(error);
-          // If we can't start listening, remain in current state
-          return;
-        }
-        break;
       case STATES.IDLE:
-        // Make sure everything is stopped
-        this.cleanup();
-        break;
+        return this.setIdle();
+      case STATES.RESPONDING:
+        return this.setSpeaking(textToSynthesize);
+      case STATES.LISTENING:
+        return this.setListening();
+      case STATES.THINKING:
+        return this.setThinking();
     }
 
+    // Update the state
     this.state = newState;
-  }
+  };
 
-  startListening() {
-    this.setState(STATES.LISTENING);
-  }
-
-  stopListening() {
+  handleError(error, label) {
+    console.info(`Assistant ${label} error`, error);
+    this.config.onError?.(error);
     this.setState(STATES.IDLE);
-  }
+  };
 
-  speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
+  stopRecognizing() {
+    if (this.recognizer.listening) {
+      this.recognizer.stop();
+    }
+  };
 
-    // Apply synthesis settings
-    Object.assign(utterance, this.config.synthesis);
-
-    utterance.onstart = () => {
-      this.setState(STATES.RESPONDING);
-      this.config.onSpeechStart?.();
-    };
-
-    utterance.onend = () => {
-      this.setState(STATES.IDLE);
-      this.config.onSpeechEnd?.();
-    };
-
-    utterance.onerror = (error) => {
-      this.setState(STATES.IDLE);
-      this.config.onError?.(error);
-    };
-
-    this.synthesizer.speak(utterance);
-  }
+  stopSpeaking() {
+    if (this.synthesizer.speaking) {
+      this.synthesizer.cancel();
+    }
+  };
 
   cleanup() {
-    this.synthesizer.cancel();
     try {
-      this.recognizer.stop();
-    } catch (e) {
-      // Ignore errors during cleanup
+      this.stopSpeaking();
+      this.stopRecognizing();
+    } catch (err) {
+      this.handleError(err, "cleanup");
     }
-  }
+  };
 }
