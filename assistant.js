@@ -32,6 +32,14 @@ const STATES = {
 
 export class Assistant {
   constructor(config = {}) {
+    // Check browser support first
+    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+      throw new Error('Speech recognition is not supported in this browser');
+    }
+    if (!('speechSynthesis' in window)) {
+      throw new Error('Speech synthesis is not supported in this browser');
+    }
+
     // So these can be accessed directly without a separate import
     this.states = STATES;
     this.state = this.states.IDLE;
@@ -49,7 +57,10 @@ export class Assistant {
 
     // Clean up on page unload
     window.addEventListener('beforeunload', () => this.cleanup());
-  }
+
+    this.recognitionResults = [];
+    this.accumulatedTranscript = '';
+  };
 
   initRecognizer() {
     // Browser compatibility check
@@ -60,41 +71,71 @@ export class Assistant {
     this.recognizer = new SpeechRecognition();
     Object.assign(this.recognizer, this.config.recognition);
 
-    this.recognitionResults = [];
-
     this.recognizer.onstart = () => {
       this.config.onListenStart?.();
     };
 
     this.recognizer.onresult = (evt) => this.handleRecognitionResult(evt);
 
+    this.recognizer.onspeechend = () => {
+      this.recognizer.stop();
+    };
+
     this.recognizer.onend = () => {
+      // Only call onListenEnd here, when recognition fully ends
       this.config.onListenEnd?.();
     };
 
     this.recognizer.onerror = (error) => {
       this.handleError(error, 'recognizer');
     };
-  }
+  };
 
   initSynthesizer() {
-    // Browser compatibility check
-    if (!('speechSynthesis' in window)) {
-      throw new Error('Speech synthesis not supported');
-    }
     this.synthesizer = window.speechSynthesis;
+
+    // Load available voices
+    this.voices = [];
+    const loadVoices = () => {
+      this.voices = this.synthesizer.getVoices();
+    };
+
+    loadVoices();
+    if (this.synthesizer.onvoiceschanged !== undefined) {
+      this.synthesizer.onvoiceschanged = loadVoices;
+    }
   };
 
   handleRecognitionResult(evt) {
-    console.log(evt.results);
-    [...evt.results].map((recognitionResult) => {
-      [...recognitionResult].map((result) => {
-        console.log(result.transcript);
-      });
+    // Convert results to a more usable format
+    const results = Array.from(evt.results).map(resultArray => {
+      return Array.from(resultArray).map(result => ({
+        transcript: result.transcript,
+        confidence: result.confidence,
+        isFinal: resultArray.isFinal
+      }));
     });
-    // console.log(evt.results.map(r => r.transcript));
-    // this.recognitionResults.push(evt.recognitionResults);
-    // this.config.onRecognitionResult?.(evt);
+
+    // Get the best transcript by taking highest confidence result from each group
+    const bestTranscript = results
+      .map(alternatives => alternatives.reduce((best, current) =>
+        current.confidence > best.confidence ? current : best
+      ))
+      .map(result => result.transcript)
+      .join(' ');
+
+    // Accumulate final transcripts
+    const lastResult = results[results.length - 1];
+    // Stop recognizing if we have final results
+    if (lastResult && lastResult[0].isFinal) {
+      this.accumulatedTranscript = (this.accumulatedTranscript + ' ' + bestTranscript).trim();
+      this.stopRecognizing();
+      // Use setState but skip cleanup since we just stopped recognizing
+      this.state = this.states.IDLE; // Directly set state to avoid cleanup
+    }
+
+    this.recognitionResults = results;
+    this.config.onRecognitionResult?.(results, bestTranscript, this.accumulatedTranscript);
   };
 
   setIdle() {
@@ -102,7 +143,15 @@ export class Assistant {
   };
 
   setListening() {
-    this.cleanup();
+    // If we're currently speaking, just stop that
+    // No need for full cleanup which would also stop recognition
+    if (this.state === STATES.RESPONDING) {
+      this.stopSpeaking();
+    } else {
+      this.cleanup();
+    }
+
+    this.accumulatedTranscript = ''; // Reset accumulated transcript when starting new session
     this.recognizer.start();
   };
 
@@ -113,8 +162,16 @@ export class Assistant {
   setSpeaking(text) {
     this.cleanup();
     const utterance = new SpeechSynthesisUtterance(text);
-    // Apply config
+
+    // Apply config including voice if specified
     Object.assign(utterance, this.config.synthesis);
+    if (this.config.synthesis.voice) {
+      const voice = this.voices.find(v => v.name === this.config.synthesis.voice);
+      if (voice) {
+        utterance.voice = voice;
+      }
+    }
+
     // Add event handlers
     utterance.onend = () => {
       this.setState(STATES.IDLE);
@@ -130,9 +187,7 @@ export class Assistant {
   };
 
   setState(newState, textToSynthesize) {
-    console.log(newState);
-
-    // Don't do anything if state state is invalid or same
+    // Don't do anything if state is invalid or same
     if (!this.states[newState]) {
       throw new Error(`Invalid state: ${newState}`);
     }
@@ -140,6 +195,10 @@ export class Assistant {
       return console.log('No Assistant state change');
     }
 
+    // Update the state first
+    this.state = newState;
+
+    // Then handle the state change
     switch (newState) {
       case STATES.IDLE:
         return this.setIdle();
@@ -150,20 +209,22 @@ export class Assistant {
       case STATES.THINKING:
         return this.setThinking();
     }
-
-    // Update the state
-    this.state = newState;
   };
 
   handleError(error, label) {
     console.info(`Assistant ${label} error`, error);
     this.config.onError?.(error);
+    this.stopRecognizing();
     this.setState(STATES.IDLE);
   };
 
   stopRecognizing() {
-    if (this.recognizer.listening) {
-      this.recognizer.stop();
+    if (this.recognizer) {
+      try {
+        this.recognizer.stop();
+      } catch (err) {
+        console.warn('Error stopping recognition:', err);
+      }
     }
   };
 
@@ -181,4 +242,12 @@ export class Assistant {
       this.handleError(err, "cleanup");
     }
   };
-}
+
+  getVoices() {
+    return this.voices;
+  };
+
+  getState() {
+    return this.state;
+  };
+};
