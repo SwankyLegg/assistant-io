@@ -12,11 +12,11 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "npm run build:lib",
+    "build": "npm run build:lib && npm run build:demo",
     "build:lib": "rollup -c",
     "build:demo": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build:demo && gh-pages -d dist",
+    "deploy": "npm run build && gh-pages -d dist",
     "prepare": "npm run build:lib",
     "prepublishOnly": "npm run build:lib"
   },

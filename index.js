@@ -1,4 +1,4 @@
-import { VoiceIO } from './voice-io.js';
+import { VoiceIO } from './src/voice-io.js';
 
 // Add this function after the imports but before the DOMContentLoaded listener
 function formatString(str) {
