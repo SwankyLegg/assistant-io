@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Voice I/O Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -22,7 +23,7 @@
                 </ol>
             </div>
             <footer>
-                <p class="note">Note: This demo requires a modern browser with speech recognition support.</p>
+                <p class="note">Note: This demo requires a modern browser with <a href="https://caniuse.com/?search=speechrecognition" target="_blank">speech recognition</a> and <a href="https://caniuse.com/?search=speechsynthesis" target="_blank">speech synthesis</a> support.</p>
             </footer>
         </div>
 
@@ -32,20 +33,20 @@
             <div class="transcript-section">
                 <div class="demo-header">
                     <div>
-                        <h3>Speech Recognition</h3>
+                        <h3>Recognition</h3>
                         <p class="section-subtitle">speech-to-text</p>
                     </div>
                     <button id="toggleMic" class="primary-button">Listen</button>
                 </div>
                 <div class="transcript-container">
-                    <div id="transcript" class="text-display">Your speech will appear here...</div>
+                    <div id="transcript" class="text-field display">Your speech will appear here...</div>
                 </div>
             </div>
 
             <div class="synthesis-section">
                 <div class="demo-header">
                     <div>
-                        <h3>Speech Synthesis</h3>
+                        <h3>Synthesis</h3>
                         <p class="section-subtitle">text-to-speech</p>
                     </div>
                     <button id="speakButton" class="primary-button">Speak</button>
@@ -53,18 +54,18 @@
                 <div id="response">
                     <input type="text" 
                            id="responseInput" 
-                           class="text-input"
+                           class="text-field input"
                            placeholder="Enter text to be spoken...">
                 </div>
             </div>
         </div>
+        <footer>
+            <a href="https://github.com/swankylegg/assistant-io" target="_blank">
+                View on GitHub
+            </a>
+        </footer>
     </div>
 
-    <footer>
-        <a href="https://github.com/swankylegg/assistant-io" target="_blank">
-            View on GitHub
-        </a>
-    </footer>
 
     <script type="module" src="index.js"></script>
 </body>

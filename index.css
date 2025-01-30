@@ -10,7 +10,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
     margin: 0;
-    padding: 20px;
+    padding: 1rem;
     background-color: #f5f5f5;
 }
 
@@ -33,10 +33,10 @@ input {
 
 .card {
     background: white;
-    padding: 2rem;
-    border-radius: 12px;
+    padding: 1.5rem;
+    border-radius: 1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .header {
@@ -93,18 +93,31 @@ input {
     margin-bottom: 1rem;
 }
 
-.text-display {
+/* Remove individual text-display and text-input classes and create a shared class */
+.text-field {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 1rem;
-    background: #f8f9fa;
-    min-height: 1.2em;
     box-sizing: border-box;
+    min-height: 4em;
+    display: flex;
+    align-items: center;
 }
 
-.text-display.interim {
+/* Additional styles for display variant */
+.text-field.display {
+    background: #f8f9fa;
+}
+
+/* Additional styles for input variant */
+.text-field.input {
+    background: white;
+}
+
+/* Style for interim text */
+.text-field.interim {
     color: #666;
     font-style: italic;
 }
@@ -116,14 +129,6 @@ input {
 
 #response {
     display: block;
-}
-
-#responseInput {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
 }
 
 .primary-button {
@@ -156,13 +161,4 @@ footer {
     margin-top: 0;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-}
-
-.text-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    background: white;
 }
