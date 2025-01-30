@@ -1,4 +1,4 @@
-export interface AssistantConfig {
+export interface VoiceIOConfig {
   onListenStart?: () => void;
   onListenEnd?: () => void;
   onRecognitionResult?: (results: RecognitionResult[][], bestTranscript: string, accumulatedTranscript: string) => void;
@@ -31,8 +31,8 @@ export interface Language {
   prefix: string;
 }
 
-export declare class Assistant {
-  constructor(config?: AssistantConfig);
+export declare class VoiceIO {
+  constructor(config?: VoiceIOConfig);
   
   states: {
     IDLE: string;

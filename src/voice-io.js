@@ -34,7 +34,7 @@ const STATES = {
   RESPONDING: 'RESPONDING'
 };
 
-export class Assistant {
+export class VoiceIO {
   constructor(config = {}) {
     // Check browser support first
     if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
@@ -255,7 +255,7 @@ export class Assistant {
       throw new Error(`Invalid state: ${newState}`);
     }
     if (this.state === newState) {
-      return console.log('No Assistant state change');
+      return console.log('No Voice I/O state change');
     }
 
     // Update the state first
@@ -275,7 +275,7 @@ export class Assistant {
   };
 
   handleError(error, label) {
-    console.info(`Assistant ${label} error`, error);
+    console.info(`Voice I/O ${label} error`, error);
     this.config.onError?.(error);
     this.stopRecognizing();
     this.setState(STATES.IDLE);

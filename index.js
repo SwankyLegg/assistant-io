@@ -1,4 +1,4 @@
-import { Assistant } from './assistant.js';
+import { VoiceIO } from './voice-io.js';
 
 // Add this function after the imports but before the DOMContentLoaded listener
 function formatString(str) {
@@ -43,32 +43,32 @@ document.addEventListener('DOMContentLoaded', () => {
   languageSelect.disabled = true;
   voiceSelect.disabled = true;
 
-  const asst = new Assistant({
+  const voice = new VoiceIO({
     onListenStart: () => {
       console.log('Started listening...');
-      currentState.textContent = formatString(asst.states.LISTENING);
+      currentState.textContent = formatString(voice.states.LISTENING);
       toggleMic.textContent = 'Stop';
       accumulatedTranscript = '';
     },
     onListenEnd: () => {
       console.log('Stopped listening');
-      currentState.textContent = formatString(asst.states.IDLE);
+      currentState.textContent = formatString(voice.states.IDLE);
       toggleMic.textContent = 'Listen';
       interimTranscript.textContent = '';
     },
     onRecognitionResult: handleRecognitionResult,
     onVoiceStart: () => {
       console.log('Started speaking');
-      currentState.textContent = formatString(asst.states.RESPONDING);
+      currentState.textContent = formatString(voice.states.RESPONDING);
       speakButton.textContent = 'Stop';
     },
     onVoiceEnd: (utterance) => {
       console.log('Finished speaking:', utterance.text);
-      currentState.textContent = formatString(asst.states.IDLE);
+      currentState.textContent = formatString(voice.states.IDLE);
       speakButton.textContent = 'Speak';
     },
     onError: (error) => {
-      console.error('Assistant error:', error);
+      console.error('Voice I/O error:', error);
       currentState.textContent = 'Error';
       toggleMic.textContent = 'Listen';
     },
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Set to current language
-      languageSelect.value = asst.getSelectedLanguage();
+      languageSelect.value = voice.getSelectedLanguage();
     },
     onVoicesLoaded: (voices) => {
       console.log('Voices loaded:', voices);
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Set to current voice
-      const currentVoice = asst.getSelectedVoice();
+      const currentVoice = voice.getSelectedVoice();
       if (currentVoice) {
         voiceSelect.value = currentVoice.name;
       }
@@ -115,29 +115,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (responseInput.value === '') {
       responseInput.value = 'Hello world';
     }
-    asst.setState(asst.states.RESPONDING, responseInput.value);
+    voice.setState(voice.states.RESPONDING, responseInput.value);
   });
 
   // Handle the listen toggle button
   toggleMic.addEventListener('click', () => {
-    if (asst.state === asst.states.LISTENING) {
-      asst.setState(asst.states.IDLE);
+    if (voice.state === voice.states.LISTENING) {
+      voice.setState(voice.states.IDLE);
     } else {
-      asst.setState(asst.states.LISTENING);
+      voice.setState(voice.states.LISTENING);
     }
   });
 
   // Simple event handlers that just tell the assistant what was selected
   languageSelect.addEventListener('change', (e) => {
-    asst.setLanguage(e.target.value);
+    voice.setLanguage(e.target.value);
   });
 
   voiceSelect.addEventListener('change', (e) => {
-    asst.setVoice(e.target.value);
+    voice.setVoice(e.target.value);
   });
 
   // Initialize button text
   toggleMic.textContent = 'Listen';
   speakButton.textContent = 'Speak';
-  currentState.textContent = formatString(asst.states.IDLE);
+  currentState.textContent = formatString(voice.states.IDLE);
 });

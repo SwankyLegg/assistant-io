@@ -1,18 +1,18 @@
 {
-  "name": "assistant-io",
+  "name": "voice-io",
   "version": "1.0.0",
   "description": "A browser-based speech recognition and synthesis assistant",
   "type": "module",
-  "main": "dist/assistant.js",
-  "module": "dist/assistant.mjs",
-  "types": "dist/assistant.d.ts",
+  "main": "dist/voice-io.js",
+  "module": "dist/voice-io.mjs",
+  "types": "dist/voice-io.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "npm run build:lib && npm run build:demo",
+    "build": "npm run build:lib",
     "build:lib": "rollup -c",
     "build:demo": "vite build",
     "preview": "vite preview",
@@ -38,10 +38,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/swankylegg/assistant-io.git"
+    "url": "git+https://github.com/swankylegg/voice-io.git"
   },
   "bugs": {
-    "url": "https://github.com/swankylegg/assistant-io/issues"
+    "url": "https://github.com/swankylegg/voice-io/issues"
   },
-  "homepage": "https://swankylegg.github.io/assistant-io/"
+  "homepage": "https://swankylegg.github.io/voice-io/"
 }

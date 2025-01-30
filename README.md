@@ -1,14 +1,14 @@
-# assistant-io
+# Voice I/O
 
 Speech Recognition (text-to-speech) & Speech Synthesis (speech-to-text)
 
 ## Demo
 
-Try it out: [Live Demo](https://swankylegg.github.io/assistant-io/)
+Try it out: [Live Demo](https://swankylegg.github.io/voice-io/)
 
 ### States
 
-The assistant has four possible states:
+Voice I/O has four possible states:
 
 - `IDLE`: Default state, not listening or speaking
 - `LISTENING`: Actively listening for speech input

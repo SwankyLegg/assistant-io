@@ -1,15 +1,16 @@
 import typescript from '@rollup/plugin-typescript';
 
 export default {
-  input: 'src/assistant.js',
+  input: 'src/voice-io.js',
   output: [
     {
-      file: 'dist/assistant.js',
-      format: 'cjs',
+      file: 'dist/voice-io.js',
+      format: 'umd',
+      name: 'VoiceIO',
       exports: 'named'
     },
     {
-      file: 'dist/assistant.mjs',
+      file: 'dist/voice-io.mjs',
       format: 'es'
     }
   ],
