@@ -32,10 +32,16 @@
             
             <div class="transcript-section">
                 <div class="demo-header">
-                    <div>
-                        <h3>Recognition</h3>
-                        <p class="section-subtitle">speech-to-text</p>
-                    </div>
+                    <h3>Recognition</h3>
+                    <p class="section-subtitle">speech-to-text</p>
+                </div>
+                <div class="controls">
+                    <select id="languageSelect" class="dropdown">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    </select>
                     <button id="toggleMic" class="primary-button">Listen</button>
                 </div>
                 <div class="transcript-container">
@@ -45,10 +51,13 @@
 
             <div class="synthesis-section">
                 <div class="demo-header">
-                    <div>
-                        <h3>Synthesis</h3>
-                        <p class="section-subtitle">text-to-speech</p>
-                    </div>
+                    <h3>Synthesis</h3>
+                    <p class="section-subtitle">text-to-speech</p>
+                </div>
+                <div class="controls">
+                    <select id="voiceSelect" class="dropdown">
+                        <option value="default">Default Voice</option>
+                    </select>
                     <button id="speakButton" class="primary-button">Speak</button>
                 </div>
                 <div id="response">
@@ -57,19 +66,6 @@
                            class="text-field input"
                            placeholder="Enter text to be spoken...">
                 </div>
-            </div>
-
-            <div class="controls">
-                <select id="languageSelect" class="dropdown">
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                </select>
-                
-                <select id="voiceSelect" class="dropdown">
-                    <option value="default">Default Voice</option>
-                </select>
             </div>
         </div>
         <footer>
