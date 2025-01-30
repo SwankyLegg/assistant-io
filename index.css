@@ -162,3 +162,22 @@ footer {
     margin-bottom: 1rem;
     font-size: 0.9rem;
 }
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.dropdown {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.dropdown:hover {
+    border-color: #888;
+}

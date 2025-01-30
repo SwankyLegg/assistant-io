@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const languageSelect = document.getElementById('languageSelect');
+  const voiceSelect = document.getElementById('voiceSelect');
+
+  // Disable selects until we have data
+  languageSelect.disabled = true;
+  voiceSelect.disabled = true;
+
   const asst = new Assistant({
     onListenStart: () => {
       console.log('Started listening...');
@@ -64,6 +71,39 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Assistant error:', error);
       currentState.textContent = 'Error';
       toggleMic.textContent = 'Listen';
+    },
+    onLanguagesLoaded: (languages) => {
+      console.log('Languages loaded:', languages);
+      languageSelect.innerHTML = '';
+      languageSelect.disabled = !languages.length;
+
+      languages.forEach(lang => {
+        const option = document.createElement('option');
+        option.value = lang.code;
+        option.textContent = `${lang.name} (${lang.code})`;
+        languageSelect.appendChild(option);
+      });
+
+      // Set to current language
+      languageSelect.value = asst.getSelectedLanguage();
+    },
+    onVoicesLoaded: (voices) => {
+      console.log('Voices loaded:', voices);
+      voiceSelect.innerHTML = '';
+      voiceSelect.disabled = !voices.length;
+
+      voices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(option);
+      });
+
+      // Set to current voice
+      const currentVoice = asst.getSelectedVoice();
+      if (currentVoice) {
+        voiceSelect.value = currentVoice.name;
+      }
     }
   });
 
@@ -85,6 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       asst.setState(asst.states.LISTENING);
     }
+  });
+
+  // Simple event handlers that just tell the assistant what was selected
+  languageSelect.addEventListener('change', (e) => {
+    asst.setLanguage(e.target.value);
+  });
+
+  voiceSelect.addEventListener('change', (e) => {
+    asst.setVoice(e.target.value);
   });
 
   // Initialize button text
