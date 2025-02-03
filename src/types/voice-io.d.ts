@@ -1,3 +1,5 @@
+export * from './web-speech-api';
+
 export interface SynthesisConfig {
   pitch: number;
   rate: number;

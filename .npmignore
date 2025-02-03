@@ -4,4 +4,6 @@ demo
 vite.config.js
 index.html
 public
-.gitignore 
+.gitignore
+!dist
+!dist/types 

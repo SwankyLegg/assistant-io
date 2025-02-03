@@ -1,6 +1,6 @@
 {
   "name": "@swankylegg/voice-io",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A browser-based speech recognition and synthesis assistant",
   "type": "module",
   "main": "dist/voice-io.js",
@@ -28,7 +28,7 @@
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "yolo": "npm run typecheck && npm run build && npm run deploy && npm publish",
-    "build:types": "tsc --emitDeclarationOnly --outDir dist/types"
+    "build:types": "tsc --emitDeclarationOnly --outDir dist/types && cp src/types/web-speech-api.d.ts dist/types/"
   },
   "keywords": [
     "speech",
@@ -42,6 +42,7 @@
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.5",
+    "@types/node": "^22.13.0",
     "gh-pages": "^6.3.0",
     "rollup": "^4.9.0",
     "tslib": "^2.8.1",

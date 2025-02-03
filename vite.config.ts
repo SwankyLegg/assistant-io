@@ -7,7 +7,6 @@ export default defineConfig(({ mode }) => ({
   base: './',
   resolve: {
     alias: {
-      // @ts-expect-error
       '@': resolve(__dirname, 'src')
     },
     extensions: ['.ts', '.js', '.d.ts']
