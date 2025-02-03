@@ -1,6 +1,6 @@
 {
   "name": "@swankylegg/voice-io",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A browser-based speech recognition and synthesis assistant",
   "type": "module",
   "main": "dist/voice-io.js",
@@ -10,16 +10,16 @@
     "dist"
   ],
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "npm run build:lib && npm run build:demo",
-    "build:lib": "rollup -c",
-    "build:demo": "vite build",
-    "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist",
-    "prepare": "npm run build:lib",
-    "prepublishOnly": "npm run build:lib",
-    "typecheck": "tsc --noEmit"
+    "start": "vite demo",
+    "dev": "vite demo",
+    "build": "vite build",
+    "build:demo": "vite build --mode demo",
+    "preview": "vite preview demo",
+    "deploy": "npm run build:demo && gh-pages -d dist-demo",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "yolo": "npm run typecheck && npm run build && npm run deploy && npm publish"
   },
   "keywords": [
     "speech",

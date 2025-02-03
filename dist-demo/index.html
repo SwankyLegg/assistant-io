@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice I/O Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script type="module" crossorigin src="./assets/index-DBCsEiQg.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DiaUdMvC.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Voice I/O Demo</h1>
+                <p class="subtitle">A demonstration of browser-based speech recognition and synthesis, coordinated by a central library that manages microphone and speaker states. It's compatible with Chrome, Edge, and Safari, on both desktop and mobile.</p>
+            </div>
+
+            <div class="instructions">
+                <h2>How it works:</h2>
+                <ol>
+                    <li>Click "Listen" to start speech recognition</li>
+                    <li>Speak into your microphone - your words will appear in the transcript area</li>
+                    <li>Recognition stops automatically after you finish speaking</li>
+                    <li>Try the text-to-speech feature by typing text and clicking "Speak"</li>
+                </ol>
+            </div>
+            <footer>
+                <p class="note">Note: This demo requires a modern browser with <a href="https://caniuse.com/?search=speechrecognition" target="_blank">speech recognition</a> and <a href="https://caniuse.com/?search=speechsynthesis" target="_blank">speech synthesis</a> support.</p>
+            </footer>
+        </div>
+
+        <div class="card">
+            <div id="status">Current State: <span id="currentState">idle</span></div>
+            
+            <div class="transcript-section">
+                <div class="demo-header">
+                    <h3>Recognition</h3>
+                    <p class="section-subtitle">speech-to-text</p>
+                </div>
+                <div class="controls">
+                    <select id="languageSelect" class="dropdown">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    </select>
+                    <button id="toggleMic" class="primary-button">Listen</button>
+                </div>
+                <div class="transcript-container">
+                    <div id="transcript" class="text-field display">Your speech will appear here...</div>
+                </div>
+            </div>
+
+            <div class="synthesis-section">
+                <div class="demo-header">
+                    <h3>Synthesis</h3>
+                    <p class="section-subtitle">text-to-speech</p>
+                </div>
+                <div class="controls">
+                    <select id="voiceSelect" class="dropdown">
+                        <option value="default">Default Voice</option>
+                    </select>
+                    <button id="speakButton" class="primary-button">Speak</button>
+                </div>
+                <div id="response">
+                    <input type="text" 
+                           id="responseInput" 
+                           class="text-field input"
+                           placeholder="Enter text to be spoken...">
+                </div>
+            </div>
+        </div>
+        <footer>
+            <a href="https://github.com/swankylegg/voice-io" target="_blank">
+                View on GitHub
+            </a>
+        </footer>
+    </div>
+
+
+</body>
+</html>
