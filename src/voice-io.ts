@@ -13,6 +13,7 @@ const SpeechRecognitionAPI = (window.SpeechRecognition || window.webkitSpeechRec
 
 /**
  * Default configuration for VoiceIO instance
+ * @type {VoiceIOConfig}
  */
 const DEFAULT_CONFIG: VoiceIOConfig = {
   // Event handlers
@@ -44,6 +45,8 @@ const DEFAULT_CONFIG: VoiceIOConfig = {
 
 /**
  * VoiceIO - A class to handle browser-based speech recognition and synthesis
+ * @class
+ * @throws {Error} If speech recognition or synthesis is not supported by the browser
  */
 export class VoiceIO {
   private readonly config: VoiceIOConfig;
@@ -68,6 +71,18 @@ export class VoiceIO {
     { code: 'zh-CN', name: '中文' }
   ];
 
+  /**
+   * Creates a new VoiceIO instance
+   * @param {Partial<VoiceIOConfig>} config - Configuration options
+   * @param {(() => void)} [config.onListenStart] - Callback when speech recognition starts
+   * @param {(() => void)} [config.onListenEnd] - Callback when speech recognition ends
+   * @param {((results: RecognitionResult[][], bestTranscript: string, accumulatedTranscript: string) => void)} [config.onRecognitionResult] - Callback for speech recognition results
+   * @param {((utterance: SpeechSynthesisUtterance) => void)} [config.onVoiceStart] - Callback when speech synthesis starts
+   * @param {((utterance: SpeechSynthesisUtterance) => void)} [config.onVoiceEnd] - Callback when speech synthesis ends
+   * @param {((error: SpeechRecognitionErrorEvent | SpeechSynthesisErrorEvent) => void)} [config.onError] - Callback for error handling
+   * @param {((languages: LanguageInfo[]) => void)} [config.onLanguagesLoaded] - Callback when available languages are loaded
+   * @param {((voices: SpeechSynthesisVoice[]) => void)} [config.onVoicesLoaded] - Callback when available voices are loaded
+   */
   constructor(config: Partial<VoiceIOConfig> = {}) {
     // Check browser support first
     if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
@@ -120,6 +135,7 @@ export class VoiceIO {
   /**
    * Initializes the speech recognition system
    * @private
+   * @throws {Error} If speech recognition is not supported
    */
   private initRecognizer(): void {
     if (!SpeechRecognitionAPI) {
@@ -151,6 +167,7 @@ export class VoiceIO {
   /**
    * Handles the loading of speech synthesis voices
    * @private
+   * Note: Some browsers (like Chrome) load voices asynchronously, which is why we need this handler
    */
   private handleVoicesLoaded(): void {
     this.voicesLoaded = true;
@@ -190,6 +207,8 @@ export class VoiceIO {
   /**
    * Processes speech recognition results
    * @private
+   * @param {SpeechRecognitionEvent} evt - The recognition event
+   * Note: Accumulates final transcripts and manages recognition state
    */
   private handleRecognitionResult(evt: SpeechRecognitionEvent): void {
     // Convert results to a more usable format
@@ -226,6 +245,7 @@ export class VoiceIO {
   /**
    * Sets the state to IDLE and performs cleanup
    * @private
+   * Note: Resets accumulated transcript when starting new session
    */
   private setIdle(): void {
     this.cleanup();
@@ -234,6 +254,7 @@ export class VoiceIO {
   /**
    * Starts listening for speech input
    * @private
+   * Note: Resets accumulated transcript when starting new session
    */
   private setListening(): void {
     // If we're currently speaking, just stop that
@@ -259,6 +280,7 @@ export class VoiceIO {
   /**
    * Initiates speech synthesis
    * @private
+   * @param {string} text - The text to synthesize
    */
   private setSpeaking(text: string): void {
     this.cleanup();
@@ -291,6 +313,9 @@ export class VoiceIO {
 
   /**
    * Changes the current state of the VoiceIO instance
+   * @param {VoiceIOState} newState - The state to transition to
+   * @param {string} [textToSynthesize] - Text to speak when transitioning to RESPONDING state
+   * @throws {Error} If the state is invalid
    */
   setState(newState: VoiceIOState, textToSynthesize?: string): void {
     // Don't do anything if state is invalid or same
@@ -320,6 +345,8 @@ export class VoiceIO {
   /**
    * Handles errors from speech recognition or synthesis
    * @private
+   * @param {SpeechRecognitionErrorEvent | SpeechSynthesisErrorEvent} error - The error that occurred
+   * @param {string} label - Label identifying the error source
    */
   private handleError(error: SpeechRecognitionErrorEvent | SpeechSynthesisErrorEvent, label: string): void {
     console.info(`Voice I/O ${label} error`, error);
@@ -354,6 +381,7 @@ export class VoiceIO {
 
   /**
    * Performs cleanup of speech recognition and synthesis
+   * @public
    */
   cleanup(): void {
     try {
@@ -366,6 +394,7 @@ export class VoiceIO {
 
   /**
    * Gets all available speech synthesis voices
+   * @returns {SpeechSynthesisVoice[]} Array of available voices
    */
   getVoices(): SpeechSynthesisVoice[] {
     return this.voices;
@@ -373,6 +402,7 @@ export class VoiceIO {
 
   /**
    * Gets the current state of the VoiceIO instance
+   * @returns {VoiceIOState} Current state from STATES enum
    */
   getState(): VoiceIOState {
     return this.state;
@@ -380,6 +410,8 @@ export class VoiceIO {
 
   /**
    * Sets the language for both speech recognition and synthesis
+   * @param {string} languageCode - Language code (e.g., 'en-US')
+   * Note: Automatically selects the first available voice for the new language
    */
   setLanguage(languageCode: string): void {
     this.selectedLanguage = languageCode;
@@ -407,6 +439,8 @@ export class VoiceIO {
   /**
    * Gets available voices for the currently selected language
    * @private
+   * @returns {SpeechSynthesisVoice[]} Array of voices matching current language
+   * Note: Matches based on language prefix (e.g., 'en' for 'en-US')
    */
   private getVoicesForCurrentLanguage(): SpeechSynthesisVoice[] {
     // Get language prefix (e.g., 'en' from 'en-US')
@@ -420,6 +454,8 @@ export class VoiceIO {
 
   /**
    * Sets the voice for speech synthesis
+   * @param {string} voiceName - Name of the voice to use
+   * Note: Only allows voices that match the current language
    */
   setVoice(voiceName: string): void {
     const validVoices = this.getVoicesForCurrentLanguage();
@@ -434,6 +470,7 @@ export class VoiceIO {
 
   /**
    * Gets the currently selected language code
+   * @returns {string} Selected language code
    */
   getSelectedLanguage(): string {
     return this.selectedLanguage;
@@ -441,6 +478,7 @@ export class VoiceIO {
 
   /**
    * Gets the currently selected voice
+   * @returns {SpeechSynthesisVoice|null} Selected voice or null if none selected
    */
   getSelectedVoice(): SpeechSynthesisVoice | null {
     return this.selectedVoice;
@@ -448,6 +486,8 @@ export class VoiceIO {
 
   /**
    * Gets available languages that have both recognition and synthesis support
+   * @returns {Array<{code: string, name: string, prefix: string}>} Array of available languages
+   * Note: Only returns languages that have both recognition and synthesis support
    */
   getAvailableLanguages(): LanguageInfo[] {
     if (!this.voices || this.voices.length === 0) {
@@ -471,4 +511,4 @@ export class VoiceIO {
         prefix: lang.code.split('-')[0].toLowerCase()
       }));
   }
-} 
+}
