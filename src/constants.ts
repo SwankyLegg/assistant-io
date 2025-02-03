@@ -1,0 +1,6 @@
+export const STATES = {
+  IDLE: 'IDLE',
+  LISTENING: 'LISTENING',
+  THINKING: 'THINKING',
+  RESPONDING: 'RESPONDING'
+} as const; 

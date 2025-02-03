@@ -1,11 +1,6 @@
-import { STATES, type VoiceIOState } from './types/voice-io';
-import type { 
-  VoiceIOConfig, 
-  SynthesisConfig, 
-  RecognitionConfig,
-  RecognitionResult,
-  LanguageInfo,
-} from './types/voice-io';
+import { STATES } from './constants';
+import { VoiceIOState, VoiceIOConfig, SynthesisConfig, RecognitionConfig, RecognitionResult, LanguageInfo } from './types/voice-io';
+import { SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent, SpeechRecognitionResult, SpeechSynthesisVoice, SpeechSynthesisErrorEvent } from './types/web-speech-api';
 
 // Add type assertion for SpeechRecognition
 const SpeechRecognitionAPI = (window.SpeechRecognition || window.webkitSpeechRecognition) as typeof SpeechRecognition;

@@ -1,5 +1,7 @@
 export * from './web-speech-api';
 
+import { STATES } from '../constants';
+
 export interface SynthesisConfig {
   pitch: number;
   rate: number;
@@ -40,13 +42,6 @@ export interface LanguageInfo {
   code: string;
   name: string;
   prefix?: string;
-};
-
-export enum STATES {
-  IDLE = 'IDLE',
-  LISTENING = 'LISTENING',
-  THINKING = 'THINKING',
-  RESPONDING = 'RESPONDING'
 };
 
 export type VoiceIOState = keyof typeof STATES;
