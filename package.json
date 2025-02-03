@@ -18,7 +18,8 @@
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
     "prepare": "npm run build:lib",
-    "prepublishOnly": "npm run build:lib"
+    "prepublishOnly": "npm run build:lib",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "speech",

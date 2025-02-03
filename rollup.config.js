@@ -1,24 +1,25 @@
 import typescript from '@rollup/plugin-typescript';
 
 export default {
-  input: 'src/voice-io.js',
+  input: 'src/voice-io.ts',
   output: [
     {
       file: 'dist/voice-io.js',
-      format: 'umd',
-      name: 'VoiceIO',
-      exports: 'named'
+      format: 'cjs',
+      sourcemap: true
     },
     {
       file: 'dist/voice-io.mjs',
-      format: 'es'
+      format: 'es',
+      sourcemap: true
     }
   ],
   plugins: [
     typescript({
+      tsconfig: './tsconfig.json',
       declaration: true,
-      declarationDir: 'dist',
-      rootDir: './src'
+      declarationDir: './dist',
     })
-  ]
+  ],
+  external: []
 }; 
