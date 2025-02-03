@@ -47,9 +47,9 @@ export enum STATES {
   RESPONDING = 'RESPONDING'
 };
 
-export type VoiceIOState = typeof STATES[keyof typeof STATES];
+export type VoiceIOState = keyof typeof STATES;
 
-export declare class VoiceIO {
+export class VoiceIO {
   constructor(config?: Partial<VoiceIOConfig>);
   
   readonly states: typeof STATES;

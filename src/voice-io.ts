@@ -1,12 +1,11 @@
-import { STATES } from './types/voice-io.d';
+import { STATES, type VoiceIOState } from './types/voice-io';
 import type { 
   VoiceIOConfig, 
   SynthesisConfig, 
   RecognitionConfig,
   RecognitionResult,
   LanguageInfo,
-  VoiceIOState
-} from './types/voice-io.d';
+} from './types/voice-io';
 
 // Add type assertion for SpeechRecognition
 const SpeechRecognitionAPI = (window.SpeechRecognition || window.webkitSpeechRecognition) as typeof SpeechRecognition;
@@ -50,7 +49,7 @@ const DEFAULT_CONFIG: VoiceIOConfig = {
  */
 export class VoiceIO {
   private readonly config: VoiceIOConfig;
-  private readonly states = STATES;
+  private readonly states: typeof STATES = STATES;
   private state: VoiceIOState = STATES.IDLE;
   private recognizer!: SpeechRecognition;
   private synthesizer!: SpeechSynthesis;
@@ -319,7 +318,7 @@ export class VoiceIO {
    */
   setState(newState: VoiceIOState, textToSynthesize?: string): void {
     // Don't do anything if state is invalid or same
-    if (!this.states[newState]) {
+    if (!(newState in STATES)) {
       throw new Error(`Invalid state: ${newState}`);
     }
     if (this.state === newState) {

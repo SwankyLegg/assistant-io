@@ -5,6 +5,13 @@ import typescript from '@rollup/plugin-typescript';
 export default defineConfig(({ mode }) => ({
   // This ensures assets are loaded correctly on GitHub Pages
   base: './',
+  resolve: {
+    alias: {
+      // @ts-expect-error
+      '@': resolve(__dirname, 'src')
+    },
+    extensions: ['.ts', '.js', '.d.ts']
+  },
   ...(mode === 'demo' ? {
     // Demo build configuration
     root: 'demo',
@@ -34,9 +41,10 @@ export default defineConfig(({ mode }) => ({
       typescript({
         tsconfig: './tsconfig.json',
         declaration: true,
-        declarationDir: './dist',
+        declarationDir: './dist/types',
         include: ['src/**/*.ts', 'src/**/*.d.ts'],
-        exclude: ['node_modules', 'dist']
+        exclude: ['node_modules', 'dist', 'demo'],
+        rootDir: 'src'
       })
     ]
   })
