@@ -39,9 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const languageSelect = document.getElementById('languageSelect');
   const voiceSelect = document.getElementById('voiceSelect');
 
-  // Disable selects until we have data
+  // Disable selects and show loading state
   languageSelect.disabled = true;
+  languageSelect.innerHTML = '<option>Loading languages...</option>';
   voiceSelect.disabled = true;
+  voiceSelect.innerHTML = '<option>Loading voices...</option>';
 
   const voice = new VoiceIO({
     onListenStart: () => {
@@ -74,9 +76,18 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onLanguagesLoaded: (languages) => {
       console.log('Languages loaded:', languages);
-      languageSelect.innerHTML = '';
-      languageSelect.disabled = !languages.length;
 
+      // Clear loading state
+      languageSelect.innerHTML = '';
+
+      if (languages.length === 0) {
+        languageSelect.innerHTML = '<option>Default</option>';
+        languageSelect.disabled = true;
+        return;
+      }
+
+      // Enable select and add options
+      languageSelect.disabled = false;
       languages.forEach(lang => {
         const option = document.createElement('option');
         option.value = lang.code;
@@ -85,13 +96,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Set to current language
-      languageSelect.value = voice.getSelectedLanguage();
+      const currentLang = voice.getSelectedLanguage();
+      if (currentLang) {
+        languageSelect.value = currentLang;
+      }
     },
     onVoicesLoaded: (voices) => {
       console.log('Voices loaded:', voices);
-      voiceSelect.innerHTML = '';
-      voiceSelect.disabled = !voices.length;
 
+      // Clear loading state
+      voiceSelect.innerHTML = '';
+
+      if (voices.length === 0) {
+        voiceSelect.innerHTML = '<option>Default</option>';
+        voiceSelect.disabled = true;
+        return;
+      }
+
+      // Enable select and add options
+      voiceSelect.disabled = false;
       voices.forEach(voice => {
         const option = document.createElement('option');
         option.value = voice.name;
@@ -127,13 +150,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Simple event handlers that just tell the assistant what was selected
+  // Update language selection handler to be more robust
   languageSelect.addEventListener('change', (e) => {
-    voice.setLanguage(e.target.value);
+    const selectedLang = e.target.value;
+    if (selectedLang) {
+      // Disable voice select while changing language
+      voiceSelect.disabled = true;
+      voiceSelect.innerHTML = '<option>Loading voices...</option>';
+
+      voice.setLanguage(selectedLang);
+    }
   });
 
+  // Update voice selection handler
   voiceSelect.addEventListener('change', (e) => {
-    voice.setVoice(e.target.value);
+    const selectedVoice = e.target.value;
+    if (selectedVoice) {
+      voice.setVoice(selectedVoice);
+    }
   });
 
   // Initialize button text

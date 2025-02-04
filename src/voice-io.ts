@@ -106,21 +106,15 @@ export class VoiceIO {
     // Initialize synthesizer and set up voice loading
     this.synthesizer = window.speechSynthesis;
 
-    // Try loading voices immediately
-    this.voices = this.synthesizer.getVoices();
-    if (this.voices.length > 0) {
+    // Set up voice changed listener first
+    this.synthesizer.onvoiceschanged = () => {
+      this.voices = this.synthesizer.getVoices();
       this.handleVoicesLoaded();
-    }
+    };
 
-    // Set up voice changed listener for browsers that need it
-    if (this.synthesizer.onvoiceschanged !== undefined) {
-      this.synthesizer.onvoiceschanged = () => {
-        this.voices = this.synthesizer.getVoices();
-        if (!this.voicesLoaded && this.voices.length > 0) {
-          this.handleVoicesLoaded();
-        }
-      };
-    }
+    // Try loading voices immediately as well (for browsers that load synchronously)
+    this.voices = this.synthesizer.getVoices();
+    this.handleVoicesLoaded();
 
     // Clean up on page unload
     window.addEventListener('beforeunload', () => this.cleanup());
@@ -165,36 +159,41 @@ export class VoiceIO {
    */
   private handleVoicesLoaded(): void {
     this.voicesLoaded = true;
+    
+    // Force refresh voices list
+    this.voices = this.synthesizer.getVoices();
 
     // Get available languages based on available voices
     const availableLanguages = this.getAvailableLanguages();
 
-    // Only proceed if we have available languages
+    // Always notify about languages, even if empty
+    this.config.onLanguagesLoaded?.(availableLanguages);
+
     if (availableLanguages.length > 0) {
-      // If no language selected or current language isn't available,
-      // select first available language
-      const currentLanguageIsValid = availableLanguages.some(
-        l => l.code === this.selectedLanguage
-      );
+        // If no language selected or current language isn't available,
+        // select first available language
+        const currentLanguageIsValid = availableLanguages.some(
+            l => l.code === this.selectedLanguage
+        );
 
-      if (!this.selectedLanguage || !currentLanguageIsValid) {
-        // Select first available language
-        this.setLanguage(availableLanguages[0].code);
-      } else {
-        // Current language is valid, just update voices
-        const availableVoices = this.getVoicesForCurrentLanguage();
-
-        // Select first voice if none selected
-        if (availableVoices.length > 0 && !this.selectedVoice) {
-          this.setVoice(availableVoices[0].name);
+        if (!this.selectedLanguage || !currentLanguageIsValid) {
+            // Select first available language
+            this.setLanguage(availableLanguages[0].code);
+        } else {
+            // Current language is valid, just update voices
+            const availableVoices = this.getVoicesForCurrentLanguage();
+            
+            // Select first voice if none selected
+            if (availableVoices.length > 0 && !this.selectedVoice) {
+                this.setVoice(availableVoices[0].name);
+            }
+            
+            // Always notify about voices for current language, even if empty
+            this.config.onVoicesLoaded?.(availableVoices);
         }
-
-        // Notify about available voices for current language
-        this.config.onVoicesLoaded?.(availableVoices);
-      }
-
-      // Notify about available languages
-      this.config.onLanguagesLoaded?.(availableLanguages);
+    } else {
+        // Notify with empty voices list if no languages available
+        this.config.onVoicesLoaded?.([]);
     }
   }
 
@@ -484,25 +483,31 @@ export class VoiceIO {
    * Note: Only returns languages that have both recognition and synthesis support
    */
   getAvailableLanguages(): LanguageInfo[] {
+    // Ensure we have the latest voices list
+    const currentVoices = this.synthesizer.getVoices();
+    if (currentVoices.length > 0) {
+        this.voices = currentVoices;
+    }
+
     if (!this.voices || this.voices.length === 0) {
-      return [];
+        return [];
     }
 
     // Get languages that have synthesis voices
     const synthLanguages = new Set(
-      this.voices.map(voice => voice.lang.split('-')[0].toLowerCase())
+        this.voices.map(voice => voice.lang.split('-')[0].toLowerCase())
     );
 
     // Filter recognition languages to only those that also have synthesis support
     return this.recognitionLanguages
-      .filter(lang => {
-        const langPrefix = lang.code.split('-')[0].toLowerCase();
-        return synthLanguages.has(langPrefix);
-      })
-      .map(lang => ({
-        code: lang.code,
-        name: lang.name,
-        prefix: lang.code.split('-')[0].toLowerCase()
-      }));
+        .filter(lang => {
+            const langPrefix = lang.code.split('-')[0].toLowerCase();
+            return synthLanguages.has(langPrefix);
+        })
+        .map(lang => ({
+            code: lang.code,
+            name: lang.name,
+            prefix: lang.code.split('-')[0].toLowerCase()
+        }));
   }
 }
